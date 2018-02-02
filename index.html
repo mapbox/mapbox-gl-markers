@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Mapbox GL marker-spec example</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='example-geojson.js'></script>
+    <script src='mapbox-gl-marker-spec.js'></script>
+    <link href='mapbox-gl-marker-spec.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id='map'></div>
+    
+    <script>
+        
+        mapboxgl.accessToken = 'pk.eyJ1IjoicGxhbmVtYWQiLCJhIjoiemdYSVVLRSJ9.g3lbg_eN0kztmsfIPxa9MQ';
+        
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v9',
+            center: [-96, 37.8],
+            zoom: 1
+        });
+        
+        // Plugin to add interactive markers to a GeoJSON that follows the marker-spec
+        map.addControl(new MapboxMarkerSpec(exampleGeojson[1]));
+    
+    </script>
+    
+</body>
+</html>
