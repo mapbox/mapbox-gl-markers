@@ -14,15 +14,23 @@ function MapboxMarkerSpec(geojson, options) {
     throw new Error('MapboxMarkerSpec needs to be called with the new keyword');
   }
   
+  this.sourceName = 'markerspec';
   this.geojson = geojson;
+
   this.options = Object.assign({
-    enabled: false,
+    enabled: true,
     showControl: true,
+    marker: {
+      image: 'https://www.mapbox.com/help/demos/custom-markers-gl-js/mapbox-icon.png'
+    },
+    popup: {
+      content: ''
+    },
     style: {
       label: '{name}',
       labelSize: 10,
-      color: '#ff00ed',
-      size: 5,
+      color: 'blue',
+      size: 2,
       opacity: 0.1,
       layers: null
     }
@@ -61,9 +69,33 @@ MapboxMarkerSpec.prototype.toggle = function() {
 * Render the plugin elements
 */
 MapboxMarkerSpec.prototype.render = function() {
-  
-  // Add the source and style layers if not already added
+
+  // Add the source and style layers for the first time
   if (!this._hasSource()) {
+
+    var _this = this;
+
+    // Generate HTML markers for each feature
+    this.geojson.features.forEach(function(marker) {
+      
+      if( marker.geometry.type=='Point'){
+        
+        // Generate the marker elements
+        var markerEl = document.createElement('div');
+        markerEl.className = 'markerspec marker';
+        markerEl.style = `background-image:url('${marker.properties["marker-image"] || _this.options.marker.image}')`;
+  
+        var popupHTML = `<h3>${marker.properties.title}</h3><p>${marker.properties.description}</p>`;
+  
+        // Add the marker for each feature in the GeoJSON
+        new mapboxgl.Marker(markerEl)
+        .setLngLat(marker.geometry.coordinates)
+        .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
+        .setHTML(popupHTML))
+        .addTo(map);
+      }
+    });
+
     this._map.addSource('markerspec', {
       type: 'geojson',
       data: this.geojson
@@ -116,7 +148,7 @@ MapboxMarkerSpec.prototype._updateMap = function() {
 // Create a button element
 function button() {
   var btn = document.createElement('button');
-  btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-marker-spec';
+  btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markerspec';
   btn.type = 'button';
   btn['aria-label'] = 'Inspect';
   return btn;
@@ -135,7 +167,7 @@ function textInput() {
 // Plugin controls container
 function container(button, input, show) {
   var container = document.createElement('div');
-  container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+  container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group markerspec';
   container.appendChild(button);
   container.appendChild(input);
   if (!show) {
@@ -158,7 +190,7 @@ function pluginButton(options) {
 }
 
 pluginButton.prototype.setPluginIcon = function() {
-  this._btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-marker-spec';
+  this._btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markerspec';
 };
 
 pluginButton.prototype.setMapIcon = function() {
@@ -167,41 +199,40 @@ pluginButton.prototype.setMapIcon = function() {
 
 // Show layers
 MapboxMarkerSpec.prototype._show = function() {
-  this.geojson.features.forEach(function(marker) {
-    
-    if( marker.geometry.type=='Point'){
-      
-      // create a HTML element for each feature
-      var el = document.createElement('div');
-      el.className = 'marker';
-      
-      // make a marker for each feature and add to the map
-      new mapboxgl.Marker(el)
-      .setLngLat(marker.geometry.coordinates)
-      .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
-      .setHTML('<h3>' + marker.properties.title + '</h3><p>' + marker.properties.description + '</p>'))
-      .addTo(map);
-    }
+
+  // Markers
+  Array.from(document.getElementsByClassName("markerspec marker")).forEach(function(marker){
+    marker.style.display = 'inline';
   });
-  //
+
+  // Make all the layers visible
+  var sourceRegExp = new RegExp(this.sourceName);
   var style = this._map.getStyle();
-  var source = /markerspec/;
   style.layers.forEach(function(layer) {
-    if (source.test(layer['source'])) {
+    if (sourceRegExp.test(layer['source'])) {
       layer['layout'] = layer['layout'] || {};
       layer['layout']['visibility'] = 'visible';
     }
   });
   this._map.setStyle(style);
+
+  // Show the text input
   this._toggle._input.style.display = 'inline';
 };
 
 // Hide layers that have the target source
 MapboxMarkerSpec.prototype._hide = function() {
+
+  // Markers
+  Array.from(document.getElementsByClassName("markerspec marker")).forEach(function(marker){
+    marker.style.display = 'none';
+  });
+
+  // Style layers that match the source name
+  var sourceRegExp = new RegExp(this.sourceName);
   var style = this._map.getStyle();
-  var source = /markerspec/;
   style.layers.forEach(function(layer) {
-    if (source.test(layer['source'])) {
+    if (sourceRegExp.test(layer['source'])) {
       layer['layout'] = layer['layout'] || {};
       layer['layout']['visibility'] = 'none';
     }
@@ -213,9 +244,9 @@ MapboxMarkerSpec.prototype._hide = function() {
 // Return true if source layers has been added already on first run
 MapboxMarkerSpec.prototype._hasSource = function() {
   var style = this._map.getStyle();
-  var source = /markerspec/;
+  var sourceRegExp = new RegExp(this.sourceName);
   return Object.keys(style.sources).filter(function(sourceName) {
-    return source.test(sourceName);
+    return sourceRegExp.test(sourceName);
   }).length > 0;
 };
 

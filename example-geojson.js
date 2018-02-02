@@ -1,29 +1,4 @@
 var exampleGeojson = [{
-  type: 'FeatureCollection',
-  features: [{
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [-77.032, 38.913]
-    },
-    properties: {
-      title: 'Mapbox',
-      description: 'Washington, D.C.'
-    }
-  },
-  {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [-122.414, 37.776]
-    },
-    properties: {
-      title: 'Mapbox',
-      description: 'San Francisco, California'
-    }
-  }
-]},
-{
   "type": "FeatureCollection",
   "features": [
     {
@@ -32,11 +7,11 @@ var exampleGeojson = [{
         "marker-color": "#7e7e7e",
         "marker-size": "medium",
         "marker-symbol": "",
-        "title": "Marker 1",
-        "text-field": "{title}",
+        "title": "North Atlantic Ocean",
         "description": "This is a sample marker that follows the marker-stylespec",
         "id": 1,
-        "website": "https://en.wikipedia.org/wiki/Atlantic_Ocean"
+        "website": "https://en.wikipedia.org/wiki/Atlantic_Ocean",
+        "image": "https://www.sciencedaily.com/images/2017/10/171009154949_1_900x600.jpg"
       },
       "geometry": {
         "type": "Point",
@@ -101,6 +76,55 @@ var exampleGeojson = [{
               50.958426723359935
             ]
           ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "marker-image": "https://d30y9cdsu7xlg0.cloudfront.net/png/7427-200.png",
+        "title": "Rocket launching spot"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -19.6875,
+          -27.994401411046148
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "marker-image": "https://www.sciencedaily.com/images/2017/10/171009154949_1_900x600.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.5,
+          -44.59046718130883
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "small",
+        "marker-symbol": "",
+        "title": "No Style"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.8671875,
+          -32.249974455863295
         ]
       }
     }
