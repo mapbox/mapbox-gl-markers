@@ -10,7 +10,7 @@ A Mapbox GL JS plugin that turns your [GeoJSON](http://geojson.io/#id=gist:anony
 **Using the web tool**
 
 1. Create and save your [geojson](http://geojson.io/#id=gist:anonymous/11d74ac48876bafa64868658d99c4846&map=1/-12/-1) to an open hosting service like [Github Gist](https://gist.github.com/anonymous/11d74ac48876bafa64868658d99c4846). For Gists, copy the raw url `https://gist.github.com/anonymous/11d74ac48876bafa64868658d99c4846/raw/8a688828a572a076dbd0dfeee016b4e06041ff21/map.geojson`
-2. Open the [Mapbox Markers web tool](https://planemad.github.io/mapbox-gl-markers/) and add the url to your geojson as a `?data=<url>` parameter before the map hash.
+2. Open the [Mapbox Markers web tool](https://mapbox.github.io/mapbox-gl-markers/) and add the url to your geojson as a `?data=<url>` parameter before the map hash.
     - eg. `https://planemad.github.io/mapbox-gl-markers/?data=https://gist.githubusercontent.com/anonymous/11d74ac48876bafa64868658d99c4846/raw/c6a8c80959cbf1814afeb28bd1757b68bd5f78a8/map.geojson#1/37.8/-20`
 
 **Using Mapbox GL JS**
@@ -19,7 +19,7 @@ A Mapbox GL JS plugin that turns your [GeoJSON](http://geojson.io/#id=gist:anony
 map.addControl(new MapboxMarkers(geojson[, options]));  // Pass a GeoJSON feature collection that follows the marker-spec
 ```
 
-See [available options](). You can also set the following using URL parameters:
+See [available options](https://github.com/mapbox/mapbox-gl-markers/blob/master/mapbox-gl-markers.js#L23-L42). You can also set the following using URL parameters:
 - **data** URL to an external GeoJSON. Use a [Gist](https://gist.github.com/anonymous/11d74ac48876bafa64868658d99c4846).
 
 ### Generating a GeoJSON
