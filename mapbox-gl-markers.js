@@ -22,18 +22,18 @@ function MapboxMarkers(geojson, options) {
   
   // Default options
   this.options = Object.assign({
-    enabled: true,
-    showControl: true,
+    enabled: this.URLSearchParams.get("enabled") || true,  // Set the starting state of the plugin
+    showControl: this.URLSearchParams.get("show-control") || true,  // Dislay UI controls to enable or disable the plugin
     marker: {
-      image: 'https://www.mapbox.com/help/demos/custom-markers-gl-js/mapbox-icon.png'
+      image: 'https://www.mapbox.com/help/demos/custom-markers-gl-js/mapbox-icon.png' // Default marker image to use as fallback
     },
     popup: {
-      content: ''
+      description: '<i>No description provided</i>' // Fallback description
     },
-    style: {
+    style: {  // Deafult style properties for the generated layers
       label: '{name}',
       labelSize: 10,
-      color: 'blue',
+      color: this.URLSearchParams.get("style-color") || 'blue',
       size: 2,
       opacity: 0.1,
       icon: 'marker', // TODO: Need to be used as a fallback using expressions
@@ -75,72 +75,92 @@ MapboxMarkers.prototype.toggle = function() {
 */
 MapboxMarkers.prototype.render = function() {
   
-  // Add the source and style layers for the first time
   if (!this._rendered) {
     
     var that = this;
     
-    // Generate HTML markers for each feature
-    this._geojson.features.forEach(function(marker) {
+    // Load geojson data from gist if found in the URL
+    if( this.URLSearchParams.get("data")){
       
-      if( marker.geometry.type=='Point'){ // TODO: Add support for lines and polygons
-        
-        // Generate the HTML marker element
-        var markerEl = document.createElement('div');
-        markerEl.className = 'markerspec marker';
-        markerEl.style = `background-image:url('${marker.properties["marker-image"] || that.options.marker.image}')`;
-        markerEl.onclick = function(e){
-          // Centre the map on the clicked marker
-          map.flyTo({
-            center: marker.geometry.coordinates
-          });
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+          that._geojson = JSON.parse(xhr.responseText);
+          renderMarkers();
         }
-        
-        // Create the HTML content based on which properties have been defined
-        var popupHTML = (typeof marker.properties.title !== 'undefined'?`<h3>${marker.properties.title}</h3>` : '' ) +
-        (typeof marker.properties.image !== 'undefined'? `<img src='${marker.properties.image}' width=200 alt='${marker.properties.title}'>` : '' ) +
-        (typeof marker.properties.description !== 'undefined'? `<p>${marker.properties.description}</p>` : '' ) +
-        (typeof marker.properties.website !== 'undefined'? `<a href='${marker.properties.website}' target='_blank' class='button'>Website</a>` : `<a href='https://www.openstreetmap.org/?mlat=${marker.geometry.coordinates[1]}&mlon=${marker.geometry.coordinates[0]}' target='_blank' class='button'>Browse Location</a>`);
-        
-        // Add the marker for each feature in the GeoJSON
-        new mapboxgl.Marker(markerEl)
-        .setLngLat(marker.geometry.coordinates)
-        .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
-        .setHTML(popupHTML))
-        .addTo(map);
       }
-    });
-    
-    this._map.addSource('markerspec', {
-      type: 'geojson',
-      data: this._geojson
-    });
-    
-    // Compute where to insert the additional style layers
-    var roadLayers = this._map.getStyle().layers.filter(function(layer) {
-      return layer['source-layer'] === 'road';
-    });
-    var topRoadLayer = roadLayers[roadLayers.length - 1].id;
-    
-    // Build the style layers for the data
-    if (!this.options.style.layers) {
-      this.options.style.layers = buildStyleLayers(this._sourceName, this.options.style);
+      xhr.open('GET', this.URLSearchParams.get("data"), true);
+      xhr.send(null);
+      
+    } else {
+      renderMarkers();
     }
-    // Add the style layers
-    var style = this._map.getStyle();
-    var mapStyle = addStyleLayers(style, this.options.style.layers, topRoadLayer);
-    this._map.setStyle(mapStyle);
-    this._toggle._input.onkeypress = (e) => {
-      // On hitting return in the query input
-      if (e.key === 'Enter') {
-        this.options.query = this._toggle._input.value;
-        this._updateMap();
-        return true;
+    
+    // Render markers and style layers from the data
+    function renderMarkers(){
+      
+      // Generate HTML markers for each feature
+      that._geojson.features.forEach(function(marker) {
+        
+        if( marker.geometry.type=='Point'){ // TODO: Add support for lines and polygons
+          
+          // Generate the HTML marker element
+          var markerEl = document.createElement('div');
+          markerEl.className = 'markerspec marker';
+          markerEl.style = `background-image:url('${marker.properties["marker-image"] || that.options.marker.image}')`;
+          markerEl.onclick = function(e){
+            // Centre the map on the clicked marker
+            map.flyTo({
+              center: marker.geometry.coordinates
+            });
+          }
+          
+          // Create the HTML content based on which properties have been defined
+          var popupHTML = (typeof marker.properties.title !== 'undefined'?`<h3>${marker.properties.title}</h3>` : '' ) +
+          (typeof marker.properties.image !== 'undefined'? `<img src='${marker.properties.image}' width=200 alt='${marker.properties.title}'>` : '' ) +
+          (typeof marker.properties.description !== 'undefined'? `<p>${marker.properties.description}</p>` : `<p>${that.options.popup.description}</p>` ) +
+          (typeof marker.properties.website !== 'undefined'? `<a href='${marker.properties.website}' target='_blank' class='button'>Website</a>` : `<a href='https://www.openstreetmap.org/?mlat=${marker.geometry.coordinates[1]}&mlon=${marker.geometry.coordinates[0]}' target='_blank' class='button'>Browse Location</a>`);
+          
+          // Add the marker for each feature in the GeoJSON
+          new mapboxgl.Marker(markerEl)
+          .setLngLat(marker.geometry.coordinates)
+          .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
+          .setHTML(popupHTML))
+          .addTo(map);
+        }
+      });
+      
+      that._map.addSource('markerspec', {
+        type: 'geojson',
+        data: that._geojson
+      });
+      
+      // Compute where to insert the additional style layers
+      var roadLayers = that._map.getStyle().layers.filter(function(layer) {
+        return layer['source-layer'] === 'road';
+      });
+      var topRoadLayer = roadLayers[roadLayers.length - 1].id;
+      
+      // Build the style layers for the data
+      if (!that.options.style.layers) {
+        that.options.style.layers = buildStyleLayers(that._sourceName, that.options.style);
       }
-    }
-
+      // Add the style layers
+      var style = that._map.getStyle();
+      var mapStyle = addStyleLayers(style, that.options.style.layers, topRoadLayer);
+      that._map.setStyle(mapStyle);
+      that._toggle._input.onkeypress = (e) => {
+        // On hitting return in the query input
+        if (e.key === 'Enter') {
+          that.options.query = that._toggle._input.value;
+          that._updateMap();
+          return true;
+        }
+      }
+    };
+    
     this._rendered = true;
-
+    
   }
   
   // Change plugin icon based on state
