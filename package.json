@@ -1,35 +1,15 @@
 {
-  "name": "mapbox-gl-marker-spec",
+  "name": "mapbox-gl-markers",
   "version": "0.0.1",
   "description": "Mapbox GL plugin that implements the GeoJSON marker spec",
-  "main": "mapbox-gl-marker-spec.js",
-  "scripts": {
-    "start": "budo example/index.js --serve=example/bundle.js --live -d",
-    "build": "NODE_ENV=production && browserify index.js | uglifyjs -c -m > dist/mapbox-gl-osmtools.js",
-    "test": "npm run lint && browserify -t envify test/index.js | smokestack -b firefox | tap-status",
-    "lint": "eslint --no-eslintrc -c .eslintrc index.js"
-  },
-  "peerDependencies": {},
-  "devDependencies": {
-    "browserify": "^13.0.0",
-    "budo": "^8.0.4",
-    "envify": "^3.4.0",
-    "eslint": "^2.0.0",
-    "smokestack": "^3.4.1",
-    "tap-status": "^1.0.1",
-    "tape": "^4.4.0",
-    "uglify-js": "^2.6.1"
-  },
-  "dependencies": {
-    "util": "^0.10.3",
-    "xhr": "^2.2.0"
-  },
+  "main": "mapbox-gl-markers.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/planemad/mapbox-gl-marker-spec.git"
   },
   "keywords": [
     "mapbox",
+    "map markers",
     "geojson"
   ],
   "author": "Arun Ganesh",

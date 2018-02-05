@@ -8,8 +8,8 @@
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.css' rel='stylesheet' />
     <script src='example-geojson.js'></script>
-    <script src='mapbox-gl-marker-spec.js'></script>
-    <link href='mapbox-gl-marker-spec.css' rel='stylesheet' />
+    <script src='mapbox-gl-markers.js'></script>
+    <link href='mapbox-gl-markers.css' rel='stylesheet' />
     <style>
         body {
             margin: 0;
@@ -41,7 +41,7 @@
         });
         
         // Plugin to add interactive markers to a GeoJSON that follows the marker-spec
-        map.addControl(new MapboxMarkerSpec(exampleGeojson));
+        map.addControl(new MapboxMarkers(exampleGeojson));
     
     </script>
     

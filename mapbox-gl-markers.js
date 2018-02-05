@@ -6,17 +6,21 @@
 * @param {object} options - Options to configure the plugin.
 */
 
-// Mapbox Marker Spec
+// Mapbox Markers
 // template based on github.com/mapbox/mapbox-gl-traffic/blob/master/mapbox-gl-traffic.js
 
-function MapboxMarkerSpec(geojson, options) {
-  if (!(this instanceof MapboxMarkerSpec)) {
-    throw new Error('MapboxMarkerSpec needs to be called with the new keyword');
+function MapboxMarkers(geojson, options) {
+  if (!(this instanceof MapboxMarkers)) {
+    throw new Error('MapboxMarkers needs to be called with the new keyword');
   }
   
-  this.sourceName = 'markerspec';
-  this.geojson = geojson;
+  // Variables
+  this.URLSearchParams = new URLSearchParams(new URL(window.location).search);  // URL parameters 
+  this._sourceName = 'markerspec'; // Used for naming the data sources and style layers
+  this._geojson = geojson; // The data that is used to 
+  this._rendered = false; // Becomes true after first run
   
+  // Default options
   this.options = Object.assign({
     enabled: true,
     showControl: true,
@@ -37,23 +41,23 @@ function MapboxMarkerSpec(geojson, options) {
     }
   }, options);
   
-  this.toggle = this.toggle.bind(this);
-  this.render = this.render.bind(this);
-  this._toggleLayers = this._toggleLayers.bind(this);
-  this._hasSource = this._hasSource.bind(this);
-  this._updateMap = this._updateMap.bind(this);
+  // Methods
+  this.toggle = this.toggle.bind(this); // Enable or disable the plugin
+  this.render = this.render.bind(this); // Renders all the plugin elements
+  this._toggleLayers = this._toggleLayers.bind(this); // Toggles the visibility of associated style layers 
+  this._updateMap = this._updateMap.bind(this); // TODO: Updates the map on each move. Nothing here yet
   this._toggle = new pluginButton({show: this.options.showControl, onToggle: this.toggle.bind(this)});
 }
 
 // Mapbox Interface Control handlers https://www.mapbox.com/mapbox-gl-js/api/#icontrol
-MapboxMarkerSpec.prototype.onAdd = function(map) {
+MapboxMarkers.prototype.onAdd = function(map) {
   this._map = map;
   map.on('load', this.render);
   map.on('moveend', this._updateMap);
   return this._toggle.elem;
 };
 
-MapboxMarkerSpec.prototype.onRemove = function() {
+MapboxMarkers.prototype.onRemove = function() {
   this._map.off('load', this.render);
   var elem = this._toggle.elem;
   elem.parentNode.removeChild(elem);
@@ -61,7 +65,7 @@ MapboxMarkerSpec.prototype.onRemove = function() {
 };
 
 // 
-MapboxMarkerSpec.prototype.toggle = function() {
+MapboxMarkers.prototype.toggle = function() {
   this.options.enabled = !this.options.enabled;
   this.render();
 };
@@ -69,15 +73,15 @@ MapboxMarkerSpec.prototype.toggle = function() {
 /**
 * Render the plugin elements
 */
-MapboxMarkerSpec.prototype.render = function() {
+MapboxMarkers.prototype.render = function() {
   
   // Add the source and style layers for the first time
-  if (!this._hasSource()) {
+  if (!this._rendered) {
     
     var that = this;
     
     // Generate HTML markers for each feature
-    this.geojson.features.forEach(function(marker) {
+    this._geojson.features.forEach(function(marker) {
       
       if( marker.geometry.type=='Point'){ // TODO: Add support for lines and polygons
         
@@ -109,7 +113,7 @@ MapboxMarkerSpec.prototype.render = function() {
     
     this._map.addSource('markerspec', {
       type: 'geojson',
-      data: this.geojson
+      data: this._geojson
     });
     
     // Compute where to insert the additional style layers
@@ -120,7 +124,7 @@ MapboxMarkerSpec.prototype.render = function() {
     
     // Build the style layers for the data
     if (!this.options.style.layers) {
-      this.options.style.layers = buildStyleLayers(this.sourceName, this.options.style);
+      this.options.style.layers = buildStyleLayers(this._sourceName, this.options.style);
     }
     // Add the style layers
     var style = this._map.getStyle();
@@ -134,6 +138,9 @@ MapboxMarkerSpec.prototype.render = function() {
         return true;
       }
     }
+
+    this._rendered = true;
+
   }
   
   // Change plugin icon based on state
@@ -147,9 +154,9 @@ MapboxMarkerSpec.prototype.render = function() {
   
 };
 
-// Update the results when the map is moved
-MapboxMarkerSpec.prototype._updateMap = function() {
-  if (this.options.enabled && this.options.geojson) {
+// TODO: Update the map results
+MapboxMarkers.prototype._updateMap = function() {
+  if (this.options.enabled && this.options._geojson) {
     console.log('Nothing to update');
   }
 }
@@ -159,7 +166,7 @@ MapboxMarkerSpec.prototype._updateMap = function() {
 // Create a button element
 function button() {
   var btn = document.createElement('button');
-  btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markerspec';
+  btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markers';
   btn.type = 'button';
   btn['aria-label'] = 'Inspect';
   return btn;
@@ -201,7 +208,7 @@ function pluginButton(options) {
 }
 
 pluginButton.prototype.setPluginIcon = function() {
-  this._btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markerspec';
+  this._btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-markers';
 };
 
 pluginButton.prototype.setMapIcon = function() {
@@ -209,7 +216,7 @@ pluginButton.prototype.setMapIcon = function() {
 };
 
 // Toggle visibility of style layers using a particular source
-MapboxMarkerSpec.prototype._toggleLayers = function() {
+MapboxMarkers.prototype._toggleLayers = function() {
   
   // Markers
   var enabled = this.options.enabled;
@@ -218,7 +225,7 @@ MapboxMarkerSpec.prototype._toggleLayers = function() {
   });
   
   // Make all the layers visible
-  var sourceRegExp = new RegExp(this.sourceName);
+  var sourceRegExp = new RegExp(this._sourceName);
   var style = this._map.getStyle();
   style.layers.forEach(function(layer) {
     if (sourceRegExp.test(layer['source'])) {
@@ -232,51 +239,42 @@ MapboxMarkerSpec.prototype._toggleLayers = function() {
   this._toggle._input.style.display = enabled ? 'inline' : 'none';
 };
 
-// Return true if source layers has been added already on first run
-MapboxMarkerSpec.prototype._hasSource = function() {
-  var style = this._map.getStyle();
-  var sourceRegExp = new RegExp(this.sourceName);
-  return Object.keys(style.sources).filter(function(sourceName) {
-    return sourceRegExp.test(sourceName);
-  }).length > 0;
-};
-
 /**
 * Define style layers
 */
-function buildStyleLayers(sourceName, options) {
+function buildStyleLayers(_sourceName, options) {
   var styleLayers = [
     {
-      'id': `${sourceName} fill`,
+      'id': `${_sourceName} fill`,
       'type': 'fill',
-      'source': `${sourceName}`,
+      'source': `${_sourceName}`,
       'paint': {
         'fill-color': options.color,
         'fill-opacity': options.opacity
       },
       'filter': ["==", "$type", "Polygon"]
     }, {
-      'id': `${sourceName} line`,
+      'id': `${_sourceName} line`,
       'type': 'line',
-      'source': `${sourceName}`,
+      'source': `${_sourceName}`,
       'paint': {
         'line-color': options.color,
         'line-width': options.size,
         'line-opacity': options.opacity
       }
     }, {
-      'id': `${sourceName} circle`,
+      'id': `${_sourceName} circle`,
       'type': 'circle',
-      'source': `${sourceName}`,
+      'source': `${_sourceName}`,
       'paint': {
         'circle-color': options.color,
         'circle-radius': options.size,
         'circle-opacity': options.opacity
       }
     }, {
-      'id': `${sourceName} symbol`,
+      'id': `${_sourceName} symbol`,
       'type': 'symbol',
-      'source': `${sourceName}`,
+      'source': `${_sourceName}`,
       'layout': {
         'text-field': options.label,
         'text-size': options.labelSize,
@@ -308,7 +306,7 @@ function addStyleLayers(style, layers, before) {
 
 // Export plugin
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = MapboxMarkerSpec;
+  module.exports = MapboxMarkers;
 } else {
-  window.MapboxTraffic = MapboxMarkerSpec;
+  window.MapboxTraffic = MapboxMarkers;
 }
