@@ -1,5 +1,7 @@
 # mapbox-gl-markers
 
+![new1](https://user-images.githubusercontent.com/126868/35832156-2f69edfe-0a9a-11e8-8f9f-cd4add6e9555.gif)
+
 A Mapbox GL JS plugin that turns your [GeoJSON](http://geojson.io/#id=gist:anonymous/96d84a56487ec7221365ab3781326671&map=1/36/19) into an interactive map in minutes.
 
 
