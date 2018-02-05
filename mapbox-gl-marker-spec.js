@@ -16,7 +16,7 @@ function MapboxMarkerSpec(geojson, options) {
   
   this.sourceName = 'markerspec';
   this.geojson = geojson;
-
+  
   this.options = Object.assign({
     enabled: true,
     showControl: true,
@@ -32,19 +32,20 @@ function MapboxMarkerSpec(geojson, options) {
       color: 'blue',
       size: 2,
       opacity: 0.1,
+      icon: 'marker', // TODO: Need to be used as a fallback using expressions
       layers: null
     }
   }, options);
   
   this.toggle = this.toggle.bind(this);
   this.render = this.render.bind(this);
-  this._hide = this._hide.bind(this);
-  this._show = this._show.bind(this);
+  this._toggleLayers = this._toggleLayers.bind(this);
   this._hasSource = this._hasSource.bind(this);
   this._updateMap = this._updateMap.bind(this);
   this._toggle = new pluginButton({show: this.options.showControl, onToggle: this.toggle.bind(this)});
 }
 
+// Mapbox Interface Control handlers https://www.mapbox.com/mapbox-gl-js/api/#icontrol
 MapboxMarkerSpec.prototype.onAdd = function(map) {
   this._map = map;
   map.on('load', this.render);
@@ -59,7 +60,7 @@ MapboxMarkerSpec.prototype.onRemove = function() {
   this._map = undefined;
 };
 
-
+// 
 MapboxMarkerSpec.prototype.toggle = function() {
   this.options.enabled = !this.options.enabled;
   this.render();
@@ -69,24 +70,34 @@ MapboxMarkerSpec.prototype.toggle = function() {
 * Render the plugin elements
 */
 MapboxMarkerSpec.prototype.render = function() {
-
+  
   // Add the source and style layers for the first time
   if (!this._hasSource()) {
-
-    var _this = this;
-
+    
+    var that = this;
+    
     // Generate HTML markers for each feature
     this.geojson.features.forEach(function(marker) {
       
-      if( marker.geometry.type=='Point'){
+      if( marker.geometry.type=='Point'){ // TODO: Add support for lines and polygons
         
-        // Generate the marker elements
+        // Generate the HTML marker element
         var markerEl = document.createElement('div');
         markerEl.className = 'markerspec marker';
-        markerEl.style = `background-image:url('${marker.properties["marker-image"] || _this.options.marker.image}')`;
-  
-        var popupHTML = `<h3>${marker.properties.title}</h3><p>${marker.properties.description}</p>`;
-  
+        markerEl.style = `background-image:url('${marker.properties["marker-image"] || that.options.marker.image}')`;
+        markerEl.onclick = function(e){
+          // Centre the map on the clicked marker
+          map.flyTo({
+            center: marker.geometry.coordinates
+          });
+        }
+        
+        // Create the HTML content based on which properties have been defined
+        var popupHTML = (typeof marker.properties.title !== 'undefined'?`<h3>${marker.properties.title}</h3>` : '' ) +
+        (typeof marker.properties.image !== 'undefined'? `<img src='${marker.properties.image}' width=200 alt='${marker.properties.title}'>` : '' ) +
+        (typeof marker.properties.description !== 'undefined'? `<p>${marker.properties.description}</p>` : '' ) +
+        (typeof marker.properties.website !== 'undefined'? `<a href='${marker.properties.website}' target='_blank' class='button'>Website</a>` : `<a href='https://www.openstreetmap.org/?mlat=${marker.geometry.coordinates[1]}&mlon=${marker.geometry.coordinates[0]}' target='_blank' class='button'>Browse Location</a>`);
+        
         // Add the marker for each feature in the GeoJSON
         new mapboxgl.Marker(markerEl)
         .setLngLat(marker.geometry.coordinates)
@@ -95,7 +106,7 @@ MapboxMarkerSpec.prototype.render = function() {
         .addTo(map);
       }
     });
-
+    
     this._map.addSource('markerspec', {
       type: 'geojson',
       data: this.geojson
@@ -109,7 +120,7 @@ MapboxMarkerSpec.prototype.render = function() {
     
     // Build the style layers for the data
     if (!this.options.style.layers) {
-      this.options.style.layers = buildStyleLayers(this.options.style);
+      this.options.style.layers = buildStyleLayers(this.sourceName, this.options.style);
     }
     // Add the style layers
     var style = this._map.getStyle();
@@ -127,10 +138,10 @@ MapboxMarkerSpec.prototype.render = function() {
   
   // Change plugin icon based on state
   if (this.options.enabled) {
-    this._show();
+    this._toggleLayers();
     this._toggle.setMapIcon();
   } else {
-    this._hide();
+    this._toggleLayers();
     this._toggle.setPluginIcon();
   }
   
@@ -165,11 +176,11 @@ function textInput() {
 }
 
 // Plugin controls container
-function container(button, input, show) {
+function createPluginContainer(button, input, show) {
   var container = document.createElement('div');
   container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group markerspec';
   container.appendChild(button);
-  container.appendChild(input);
+  // container.appendChild(input); // TODO: A search functionalty for markers. See https://www.mapbox.com/help/building-a-store-locator/
   if (!show) {
     container.style.display = 'none';
   }
@@ -185,8 +196,8 @@ function pluginButton(options) {
   
   this._btn = button(); // Plugin toggle button
   this._btn.onclick = options.onToggle;
-  this._input = textInput(); // Plugin  text input
-  this.elem = container(this._btn, this._input, options.show);
+  this._input = textInput(); // Does not do anything right now
+  this.elem = createPluginContainer(this._btn, this._input, options.show);
 }
 
 pluginButton.prototype.setPluginIcon = function() {
@@ -197,48 +208,28 @@ pluginButton.prototype.setMapIcon = function() {
   this._btn.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-map';
 };
 
-// Show layers
-MapboxMarkerSpec.prototype._show = function() {
-
+// Toggle visibility of style layers using a particular source
+MapboxMarkerSpec.prototype._toggleLayers = function() {
+  
   // Markers
+  var enabled = this.options.enabled;
   Array.from(document.getElementsByClassName("markerspec marker")).forEach(function(marker){
-    marker.style.display = 'inline';
+    marker.style.display = enabled ? 'inline' : 'none';
   });
-
+  
   // Make all the layers visible
   var sourceRegExp = new RegExp(this.sourceName);
   var style = this._map.getStyle();
   style.layers.forEach(function(layer) {
     if (sourceRegExp.test(layer['source'])) {
       layer['layout'] = layer['layout'] || {};
-      layer['layout']['visibility'] = 'visible';
+      layer['layout']['visibility'] = enabled ? 'visible' : 'none';
     }
   });
   this._map.setStyle(style);
-
+  
   // Show the text input
-  this._toggle._input.style.display = 'inline';
-};
-
-// Hide layers that have the target source
-MapboxMarkerSpec.prototype._hide = function() {
-
-  // Markers
-  Array.from(document.getElementsByClassName("markerspec marker")).forEach(function(marker){
-    marker.style.display = 'none';
-  });
-
-  // Style layers that match the source name
-  var sourceRegExp = new RegExp(this.sourceName);
-  var style = this._map.getStyle();
-  style.layers.forEach(function(layer) {
-    if (sourceRegExp.test(layer['source'])) {
-      layer['layout'] = layer['layout'] || {};
-      layer['layout']['visibility'] = 'none';
-    }
-  });
-  this._map.setStyle(style);
-  this._toggle._input.style.display = 'none';
+  this._toggle._input.style.display = enabled ? 'inline' : 'none';
 };
 
 // Return true if source layers has been added already on first run
@@ -251,48 +242,50 @@ MapboxMarkerSpec.prototype._hasSource = function() {
 };
 
 /**
-* Define layers
+* Define style layers
 */
-function buildStyleLayers(options) {
+function buildStyleLayers(sourceName, options) {
   var styleLayers = [
     {
-      'id': 'markerspec fill',
+      'id': `${sourceName} fill`,
       'type': 'fill',
-      'source': 'markerspec',
+      'source': `${sourceName}`,
       'paint': {
         'fill-color': options.color,
         'fill-opacity': options.opacity
       },
       'filter': ["==", "$type", "Polygon"]
     }, {
-      'id': 'markerspec line',
+      'id': `${sourceName} line`,
       'type': 'line',
-      'source': 'markerspec',
+      'source': `${sourceName}`,
       'paint': {
         'line-color': options.color,
         'line-width': options.size,
         'line-opacity': options.opacity
       }
     }, {
-      'id': 'markerspec circle',
+      'id': `${sourceName} circle`,
       'type': 'circle',
-      'source': 'markerspec',
+      'source': `${sourceName}`,
       'paint': {
         'circle-color': options.color,
         'circle-radius': options.size,
         'circle-opacity': options.opacity
       }
     }, {
-      'id': 'markerspec symbol',
+      'id': `${sourceName} symbol`,
       'type': 'symbol',
-      'source': 'markerspec',
+      'source': `${sourceName}`,
       'layout': {
         'text-field': options.label,
         'text-size': options.labelSize,
-        "text-font": [
-          "Open Sans Semibold", "Arial Unicode MS Bold"
+        'text-font': [
+          'Open Sans Semibold', 'Arial Unicode MS Bold'
         ],
-        'text-anchor': 'top'
+        'text-anchor': 'top',
+        'icon-image': '{icon}-15',
+        'icon-allow-overlap': true
       }
     }
   ];

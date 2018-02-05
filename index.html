@@ -36,11 +36,12 @@
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v9',
             center: [-20, 37.8],
-            zoom: 1
+            zoom: 1,
+            hash: true
         });
         
         // Plugin to add interactive markers to a GeoJSON that follows the marker-spec
-        map.addControl(new MapboxMarkerSpec(exampleGeojson[0]));
+        map.addControl(new MapboxMarkerSpec(exampleGeojson));
     
     </script>
     

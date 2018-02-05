@@ -1,4 +1,4 @@
-var exampleGeojson = [{
+var exampleGeojson = {
   "type": "FeatureCollection",
   "features": [
     {
@@ -127,8 +127,49 @@ var exampleGeojson = [{
           -32.249974455863295
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "stroke": "#555555",
+        "stroke-width": 2,
+        "stroke-opacity": 1,
+        "title": "Just a line"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            21.796875,
+            56.75272287205736
+          ],
+          [
+            22.5,
+            40.97989806962013
+          ],
+          [
+            55.54687499999999,
+            24.84656534821976
+          ],
+          [
+            68.203125,
+            -7.362466865535738
+          ],
+          [
+            60.1171875,
+            -46.8000594467873
+          ],
+          [
+            46.05468749999999,
+            -62.103882522897855
+          ],
+          [
+            55.8984375,
+            -67.474922384787
+          ]
+        ]
+      }
     }
   ]
-}
-];
+};
 
