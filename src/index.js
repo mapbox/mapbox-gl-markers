@@ -17,7 +17,7 @@ function MapboxMarkers(geojson, options) {
   // Variables
   this.URLSearchParams = new URLSearchParams(new URL(window.location).search);  // URL parameters 
   this._sourceName = 'markerspec'; // Used for naming the data sources and style layers
-  this._geojson = geojson; // The data that is used to 
+  this._geojson = geojson; // The GeoJSON data that is used to generate markers
   this._rendered = false; // Becomes true after first run
   
   // Default options
@@ -326,7 +326,7 @@ function addStyleLayers(style, layers, before) {
 
 // Export plugin
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = MapboxMarkers;
+  window.MapboxMarkers = MapboxMarkers;
 } else {
-  window.MapboxTraffic = MapboxMarkers;
+  module.exports = MapboxMarkers;
 }

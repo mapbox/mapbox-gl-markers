@@ -15,6 +15,15 @@ A Mapbox GL JS plugin that turns your [GeoJSON](http://geojson.io/#id=gist:anony
 
 **Using Mapbox GL JS**
 
+Include the JS and CSS in the <head>:
+
+```html
+<script src='https://rawgit.com/mapbox/mapbox-gl-markers/master/dist/mapbox-gl-markers.js'></script>
+<link href='https://rawgit.com/mapbox/mapbox-gl-markers/master/dist/mapbox-gl-markers.css' rel='stylesheet' />
+```
+
+Add the plugin after initializing your [Mapbox GL map](https://www.mapbox.com/mapbox-gl-js/example/simple-map/):
+
 ```javascript
 map.addControl(new MapboxMarkers(geojson[, options]));  // Pass a GeoJSON feature collection that follows the marker-spec
 ```
