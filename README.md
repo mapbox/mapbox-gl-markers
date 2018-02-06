@@ -13,6 +13,8 @@ A Mapbox GL JS plugin that turns your [GeoJSON](http://geojson.io/#id=gist:anony
 2. Open the [Mapbox Markers web tool](https://mapbox.github.io/mapbox-gl-markers/) and add the url to your geojson as a `?data=<url>` parameter before the map hash.
     - eg. `https://planemad.github.io/mapbox-gl-markers/?data=https://gist.githubusercontent.com/anonymous/11d74ac48876bafa64868658d99c4846/raw/c6a8c80959cbf1814afeb28bd1757b68bd5f78a8/map.geojson#1/37.8/-20`
 
+**Using NPM `mapbox-gl-markers`**
+
 **Using Mapbox GL JS**
 
 Include the JS and CSS in the <head>:
@@ -31,10 +33,11 @@ map.addControl(new MapboxMarkers(geojson[, options]));  // Pass a GeoJSON featur
 See [available options](https://github.com/mapbox/mapbox-gl-markers/blob/master/mapbox-gl-markers.js#L23-L42). You can also set the following using URL parameters:
 - **data** URL to an external GeoJSON. Use a [Gist](https://gist.github.com/anonymous/11d74ac48876bafa64868658d99c4846).
 
-### Generating a GeoJSON
-
-Use [geojson.io](http://geojson.io/#id=gist:anonymous/11d74ac48876bafa64868658d99c4846&map=1/-12/-1) to quickly create a custom GeoJSON dataset with the properties you need. 
-
-### GeoJSON marker-spec
+## GeoJSON marker-spec
 
 This is a WIP: https://paper.dropbox.com/doc/marker-spec-1-11DEmlIrR8bk1dlm3sU8B
+
+## Contributing
+
+- `npm start` to run the development page with live reload
+- `npm run build` to update the final dist/mapbox-gl-markers.js file
